@@ -1,0 +1,15 @@
+<!-- 
+ -->
+
+<launch>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="enu2ned" args="0.0 0.0 0.0 1.57079632679 0.0 3.1415926 enu ned" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="ned2A" args="3.0 1.0 -5.0 2.094395 -0.0872665 0.5235988 ned A" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="ned2D" args="0.0 -5.0 0.0  1.57079632679 0.0 0.0 ned D" />
+  
+  <node pkg="tf_practice" type="transform_practice" name="transform_practice" output="screen"> </node>
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find tf_practice)/config/transform_practice.rviz"/>
+
+
+</launch>

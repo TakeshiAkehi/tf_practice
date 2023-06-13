@@ -136,33 +136,34 @@ void NODE_NAME::evt_tf_listen_cb(const ros::TimerEvent &event){
     tf::StampedTransform transform;
     try{
         // get transform from A to ned
-        this->tf_listener.waitForTransform("ned", "A", time, ros::Duration(5.0));
-        this->tf_listener.lookupTransform("ned", "A",  time, transform);
+        this->tf_listener.waitForTransform(target_frame, source_frame, time, ros::Duration(5.0));
+        this->tf_listener.lookupTransform(target_frame, source_frame, time, transform);
         // ROS_INFO("listener result : %s",pretty(transform).c_str());
     }
     catch (tf::TransformException ex){
         ROS_ERROR("%s",ex.what());
     }
 
-    // transform Vector3
-    tf::Vector3 pt_source = tf::Vector3(0,0,3);
-    tf::Vector3 pt_target = transform * pt_source;
-    
+    double z = 3.0;
     // transform pcl::PointCloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source(new pcl::PointCloud<pcl::PointXYZ>);
     for(int i = 0; i < 100; i++){
-        pcl::PointXYZ pt_source_i = pcl::PointXYZ(cosf(2*M_PI*i/100),sinf(2*M_PI*i/100),pt_source.z());
+        pcl::PointXYZ pt_source_i = pcl::PointXYZ(cosf(2*M_PI*i/100),sinf(2*M_PI*i/100),z);
         cloud_source->push_back(pt_source_i);
     }
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target(new pcl::PointCloud<pcl::PointXYZ>);
     pcl_ros::transformPointCloud(*cloud_source, *cloud_target, transform);
+
+    // transform Vector3
+    tf::Vector3 pt_source = tf::Vector3(0,0,z);
+    tf::Vector3 pt_target = transform * pt_source;
     pcl::PointXYZ pt_target_pcl = pcl::PointXYZ(pt_target.x(),pt_target.y(),pt_target.z());
     cloud_target->push_back(pt_target_pcl);
 
     // pcl to ROS msg
     sensor_msgs::PointCloud2 output_pc_msg;
     pcl::toROSMsg(*cloud_target, output_pc_msg);
-    output_pc_msg.header.frame_id = "ned";
+    output_pc_msg.header.frame_id = target_frame;
     output_pc_msg.header.stamp = ros::Time::now();
     this->pub_cloud.publish(output_pc_msg);
 }
